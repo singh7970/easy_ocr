@@ -23,15 +23,20 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # Fix: write the download script to a .py file first, then run it
+      # Fix: force UTF-8 so EasyOCR progress bar characters don't crash PowerShell
       - name: Pre-download EasyOCR models
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
         run: |
           echo "import easyocr" > download_models.py
+          echo "import os" >> download_models.py
+          echo "os.environ['PYTHONUTF8'] = '1'" >> download_models.py
           echo "print('Downloading EasyOCR models...')" >> download_models.py
-          echo "r = easyocr.Reader(['en'], gpu=False, verbose=True)" >> download_models.py
+          echo "r = easyocr.Reader(['en'], gpu=False, verbose=False)" >> download_models.py
           echo "print('Done.')" >> download_models.py
           echo "del r" >> download_models.py
-          python download_models.py
+          python -X utf8 download_models.py
 
       - name: Build EXE with PyInstaller
         run: |
