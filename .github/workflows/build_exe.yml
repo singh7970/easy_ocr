@@ -38,6 +38,10 @@ jobs:
           echo "del r" >> download_models.py
           python -X utf8 download_models.py
 
+      - name: Create required folders
+        run: mkdir -p static\uploads
+        shell: cmd
+
       - name: Build EXE with PyInstaller
         run: |
           $model_dir = "$env:USERPROFILE\.EasyOCR\model"
