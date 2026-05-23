@@ -3,50 +3,45 @@ name: Build Windows EXE
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:   # allows manual trigger from GitHub website
+  workflow_dispatch:
 
 jobs:
   build-windows-exe:
-    runs-on: windows-latest   # GitHub uses a real Windows machine
+    runs-on: windows-latest
 
     steps:
-      # 1. Download your code onto the Windows machine
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Install Python 3.11 on that Windows machine
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3. Install all your project dependencies
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. Run app briefly so EasyOCR downloads its model weights
-      #    We set a timeout because uvicorn won't exit on its own
+      # Fix: write the download script to a .py file first, then run it
       - name: Pre-download EasyOCR models
         run: |
-          python -c "
-          import easyocr
-          print('Downloading EasyOCR models...')
-          reader = easyocr.Reader(['en'], gpu=False, verbose=True)
-          print('Models downloaded successfully.')
-          del reader
-          "
+          echo "import easyocr" > download_models.py
+          echo "print('Downloading EasyOCR models...')" >> download_models.py
+          echo "r = easyocr.Reader(['en'], gpu=False, verbose=True)" >> download_models.py
+          echo "print('Done.')" >> download_models.py
+          echo "del r" >> download_models.py
+          python download_models.py
 
-      # 5. Build the EXE using PyInstaller
       - name: Build EXE with PyInstaller
         run: |
+          $model_dir = "$env:USERPROFILE\.EasyOCR\model"
           pyinstaller `
             --onefile `
             --name "OCRApp" `
             --add-data "templates;templates" `
             --add-data "static;static" `
-            --add-data "$env:USERPROFILE\.EasyOCR\model;.EasyOCR\model" `
+            --add-data "$model_dir;.EasyOCR\model" `
             --hidden-import "uvicorn.logging" `
             --hidden-import "uvicorn.loops" `
             --hidden-import "uvicorn.loops.auto" `
@@ -83,10 +78,9 @@ jobs:
             --collect-all "easyocr" `
             run_app.py
 
-      # 6. Upload the finished EXE so you can download it
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
           name: OCRApp-Windows
           path: dist/OCRApp.exe
-          retention-days: 30   # file stays available for 30 days
+          retention-days: 30
