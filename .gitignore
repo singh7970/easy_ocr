@@ -1,0 +1,64 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pycache
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ── PyInstaller build output ──────────────────────────────────────────────────
+dist/
+build/
+*.spec
+
+# ── Database files (SQLite) ───────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+rawdat.db
+
+# ── Uploaded files (user data — never push to GitHub) ────────────────────────
+static/uploads/
+uploads/
+outputs/
+
+# ── EasyOCR model weights (large files, ~100MB — don't push) ─────────────────
+.EasyOCR/
+*.pth
+*.onnx
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+
+# ── OS junk ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Temporary files ───────────────────────────────────────────────────────────
+*.tmp
+*.bak
+tmp/
+temp/

@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+jinja2
+easyocr
+opencv-python
+numpy
+pymupdf
+pytesseract
+SQLAlchemy
+# pymysql        # Only needed for MySQL (not required in SQLite demo mode)
+# cryptography    # Only needed for MySQL (not required in SQLite demo mode)

@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>img pdf reader</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --bg2: #e8eaed;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --border: #e2e4e8;
+    --border2: #d0d3d9;
+    --blue: #4a6cf7;
+    --blue-light: #eef0fe;
+    --blue-mid: #6b85f8;
+    --text: #1a1d23;
+    --text2: #4a4f5c;
+    --muted: #8e94a1;
+    --muted2: #b8bcc6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+    --shadow-lg: 0 16px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(74,108,247,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(107,133,248,0.04) 0%, transparent 50%);
+    pointer-events:none; z-index:0;
+  }
+
+  .container {
+    position: relative; z-index:1;
+    width: 100%;
+    max-width: 560px;
+    transition: max-width 0.3s ease;
+  }
+  .container.expanded {
+    max-width: 1100px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    box-shadow: 0 4px 12px rgba(74,108,247,0.3);
+  }
+
+  .logo-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 10px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeUp 0.5s ease 0.08s both;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 15px;
+    padding: 48px 32px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--blue);
+    background: var(--blue-light);
+  }
+
+  .drop-zone.drag-over { transform: scale(1.01); }
+
+  input[type="file"] { display:none; }
+
+  .icon-wrap {
+    width: 68px; height: 68px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .drop-zone:hover .icon-wrap {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .upload-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 21px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .upload-sub {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .browse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 24px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(74,108,247,0.3);
+  }
+
+  .browse-btn:hover {
+    background: #3a5ce6;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(74,108,247,0.35);
+  }
+
+  .formats {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .fmt {
+    padding: 3px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .file-row {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 12px 14px;
+    margin-top: 10px;
+  }
+  .file-row.show { display: flex; animation: fadeUp 0.3s ease; }
+
+  .file-type-badge {
+    width: 42px; height: 42px;
+    background: var(--blue-light);
+    border: 1px solid rgba(74,108,247,0.15);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .file-meta { flex:1; min-width:0; }
+
+  .f-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .f-size {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .rm-btn {
+    width: 30px; height: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted2);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+  .rm-btn:hover { border-color: var(--red); color: var(--red); background: #fef2f2; }
+
+  .prog-wrap {
+    display: none;
+    margin-top: 10px;
+    padding: 4px 2px 2px;
+  }
+  .prog-wrap.show { display:block; animation: fadeUp 0.3s ease; }
+
+  .prog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .prog-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .prog-pct   { font-size: 12px; color: var(--blue); font-weight: 600; }
+
+  .prog-bar {
+    height: 4px;
+    background: var(--bg2);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .prog-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--blue), var(--blue-mid));
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  .prog-fill.indeterminate {
+    width: 32%;
+    position: absolute;
+    left: 0;
+    animation: progSlide 1.2s ease-in-out infinite;
+  }
+
+  @keyframes progSlide {
+    0% { left: -32%; }
+    100% { left: 100%; }
+  }
+
+  .cancel-upload {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .cancel-upload:hover { background: #fef2f2; }
+
+  .prog-detail-box {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-align: left;
+  }
+
+  .prog-detail-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .prog-detail-text {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 400;
+    min-height: 3.2em;
+    transition: opacity 0.25s ease;
+  }
+
+  .prog-detail-text.fade { opacity: 0.45; }
+
+  .extract-hint {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    text-align: left;
+  }
+
+  .extract-hint.show { display: block; animation: fadeUp 0.3s ease; }
+
+  .open-btn {
+    display: none;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+    color: #fff;
+    border: none;
+    border-radius: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(74,108,247,0.3);
+  }
+
+  .open-btn.show { display: flex; animation: fadeUp 0.3s ease; }
+  .open-btn:hover { opacity:.92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(74,108,247,0.35); }
+  .open-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* Reader */
+  .reader-view { display:none; animation: fadeUp 0.4s ease; }
+  .reader-view.show { display:block; }
+
+  .r-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .r-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+  .r-icon {
+    width: 32px; height: 32px;
+    background: var(--blue-light);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .r-filename {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    max-width: min(260px, 50vw);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .r-right { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .r-btn {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .r-btn:hover { background: var(--blue-light); border-color: rgba(74,108,247,0.2); color: var(--blue); }
+
+  .r-btn-download {
+    width: auto !important;
+    min-height: 36px;
+    padding: 0 14px !important;
+    gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--blue), var(--blue-mid)) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 3px 12px rgba(74, 108, 247, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  }
+
+  .r-btn-download:hover {
+    background: linear-gradient(135deg, #3d5ef0, #5b76f9) !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(74, 108, 247, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  }
+
+  .r-btn-download:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 108, 247, 0.35);
+  }
+
+  .r-btn-download .r-dl-icon {
+    font-size: 16px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+  }
+
+  .r-btn-download .r-dl-label {
+    white-space: nowrap;
+  }
+
+  .r-meta {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .r-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .r-chip.accent {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #15803d;
+  }
+
+  .r-chip.info {
+    background: var(--blue-light);
+    border-color: rgba(74,108,247,0.2);
+    color: var(--blue);
+  }
+
+  .r-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px 22px;
+    min-height: 400px;
+    max-height: min(80vh, 700px);
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    box-shadow: var(--shadow-lg);
+    text-align: left;
+  }
+
+  .r-hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .r-text {
+    flex: 1;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .r-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+    min-height: 200px;
+  }
+
+  .r-empty .r-big { font-size: 52px; margin-bottom: 16px; }
+
+  .r-empty h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .r-empty p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .pill {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 5px 14px;
+    background: var(--blue-light);
+    color: var(--blue);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(74,108,247,0.15);
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted2);
+    animation: fadeUp 0.5s ease 0.15s both;
+  }
+
+  footer strong { color: var(--muted); font-weight: 500; }
+
+  /* ── Full-Access Paywall Banner ─────────────────────────────────────── */
+  .paywall-gate {
+    margin-top: 18px;
+    border-radius: 14px;
+    border: 1.5px dashed rgba(74,108,247,0.35);
+    background: linear-gradient(135deg, #f0f4ff 0%, #fdf4ff 100%);
+    padding: 28px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    display: none; /* shown via JS after PDF OCR */
+  }
+  .paywall-gate.visible { display: block; animation: fadeUp 0.45s ease; }
+
+  .paywall-gate::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(74,108,247,0.03) 0px, rgba(74,108,247,0.03) 8px,
+      transparent 8px, transparent 16px
+    );
+    pointer-events: none;
+  }
+
+  .paywall-lock {
+    font-size: 38px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 6px rgba(74,108,247,0.25));
+  }
+
+  .paywall-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 19px;
+    color: var(--text);
+    margin-bottom: 7px;
+  }
+
+  .paywall-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 320px;
+    margin: 0 auto 16px;
+  }
+
+  .paywall-badge-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .paywall-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .paywall-badge.locked {
+    background: #fef9c3;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+
+  .paywall-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 26px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+    color: #fff;
+    border: none;
+    border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: default;
+    box-shadow: 0 4px 14px rgba(74,108,247,0.32);
+    letter-spacing: 0.02em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">📄</div>
+      <span class="logo-name">img pdf reader</span>
+    </div><br>
+    <span class="badge"><span class="badge-dot"></span> EasyOCR · PDF &amp; images</span>
+  </header>
+
+  <div id="uploadView">
+    <form class="card" id="uploadForm">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+        <div class="icon-wrap">📂</div>
+        <h2 class="upload-title">Drop your document here</h2>
+        <p class="upload-sub">Drag &amp; drop or browse — then extract text on this server</p>
+        <button type="button" class="browse-btn" id="browseBtn">
+          ↑ &nbsp;Browse Files
+            <div class="formats" style="margin-bottom: 20px;">
+          <span class="fmt">PDF</span>
+          <span class="fmt">JPG</span>
+          <span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 15px; padding: 0 4px;">
+        <label for="userName" style="display:block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; text-align: left;">Your Name <span style="color:red">*</span></label>
+        <input type="text" id="userName" name="user_name" placeholder="E.g. John Doe" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 14.5px; outline: none; transition: all 0.2s; background: #fff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+      </div>
+      </div>
+
+      <div class="file-row" id="fileRow">
+        <div class="file-type-badge" id="fileBadge">📄</div>
+        <div class="file-meta">
+          <div class="f-name" id="fName">—</div>
+          <div class="f-size" id="fSize">—</div>
+        </div>
+        <button type="button" class="rm-btn" id="rmBtn" aria-label="Remove file">✕</button>
+      </div>
+
+      <div class="prog-wrap" id="progWrap">
+        <div class="prog-header">
+          <span class="prog-label" id="progLabel">Uploading &amp; extracting text…</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="prog-pct" id="progPct"></span>
+            <button type="button" class="cancel-upload" id="cancelUploadBtn">Cancel</button>
+          </div>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" id="progFill"></div>
+        </div>
+        <div class="prog-detail-box">
+          <p class="prog-detail-title" id="progTitle">Running EasyOCR on the server…</p>
+          <p class="prog-detail-text" id="progDetailText"></p>
+        </div>
+      </div>
+
+      <p class="extract-hint" id="extractHint">
+        <strong style="color:var(--text2);font-weight:600;">Why it can feel slow:</strong>
+        EasyOCR uses deep-learning detection and recognition on every page or image — not instant like opening a plain text file.
+        Large scans and multi-page PDFs take longer; CPU-only setups often need tens of seconds per page. This is expected.
+      </p>
+
+      <button type="button" class="open-btn" id="extractBtn">Extract text &nbsp;→</button>
+    </form>
+  </div>
+
+  <div class="reader-view" id="readerView">
+    <div class="r-topbar">
+      <div class="r-left">
+        <div class="r-icon" id="rIcon">📄</div>
+        <div>
+          <div class="r-filename" id="rFilename">document.pdf</div>
+          <div class="r-meta">
+            <span class="r-chip info">Time: <span id="timeScore">--</span></span>
+            <span class="r-chip accent">Confidence: <span id="confScore">--</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="r-right">
+        <button type="button" class="r-btn" id="editBtn" title="Edit Text">✏️</button>
+        <button type="button" class="r-btn r-btn-download" id="saveDbBtn" title="Save to DB" style="display:none; background: linear-gradient(135deg, var(--green), #16a34a) !important;">
+          <span class="r-dl-icon" aria-hidden="true">💾</span>
+          <span class="r-dl-label">Save to DB</span>
+        </button>
+        <button type="button" class="r-btn" id="zoomInBtn" title="Larger text">＋</button>
+        <button type="button" class="r-btn" id="zoomOutBtn" title="Smaller text">－</button>
+        <button type="button" class="r-btn r-btn-download" id="downloadBtn" title="Download extracted text as .txt">
+          <span class="r-dl-icon" aria-hidden="true">⬇</span>
+          <span class="r-dl-label">Download .txt</span>
+        </button>
+        <button type="button" class="r-btn r-btn-download" id="newFileBtn" title="Upload New File" style="background: linear-gradient(135deg, var(--text2), var(--text)) !important;">
+          <span class="r-dl-icon" aria-hidden="true">🔄</span>
+          <span class="r-dl-label">New File</span>
+        </button>
+      </div>
+    </div>
+    <div class="r-body">
+      <div id="rViewer" style="flex: 1; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--surface2);"></div>
+      <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+        <p class="r-hint">Reading order for normal pages. FIELD / VALUE / NOTES style rows appear only when the page looks like a form with those headers.</p>
+        <div style="display: none; margin-bottom: 15px; padding: 12px; background: var(--blue-light); border-radius: 10px; border: 1px solid #c7d2fe;" id="docDateContainer">
+          <label style="font-size: 13px; font-weight: 600; color: var(--blue-mid); display: block;">Extract Document Date (from image):</label>
+          <input type="text" id="docDateInput" placeholder="e.g. 08 Oct 24" style="width: 100%; padding: 10px; margin-top: 6px; border-radius: 8px; border: 1px solid #a5b4fc; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;">
+        </div>
+        <div id="ocrScrollArea" style="flex:1; overflow:auto; display:flex; flex-direction:column;">
+          <div class="r-text" id="ocrText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>Self-hosted OCR</strong> — files are sent to this server for processing
+  </footer>
+
+</div>
+
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const fileRow = document.getElementById('fileRow');
+  const fileBadge = document.getElementById('fileBadge');
+  const fName = document.getElementById('fName');
+  const fSize = document.getElementById('fSize');
+  const rmBtn = document.getElementById('rmBtn');
+  const progWrap = document.getElementById('progWrap');
+  const progFill = document.getElementById('progFill');
+  const progPct = document.getElementById('progPct');
+  const progLabel = document.getElementById('progLabel');
+  const extractBtn = document.getElementById('extractBtn');
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadView = document.getElementById('uploadView');
+  const readerView = document.getElementById('readerView');
+  const rIcon = document.getElementById('rIcon');
+  const rFilename = document.getElementById('rFilename');
+  const newFileBtn = document.getElementById('newFileBtn');
+  const ocrText = document.getElementById('ocrText');
+  const timeScore = document.getElementById('timeScore');
+  const confScore = document.getElementById('confScore');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const editBtn = document.getElementById('editBtn');
+  const saveDbBtn = document.getElementById('saveDbBtn');
+  const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+  const digitalBtn = document.getElementById('digitalBtn');
+  const progTitle = document.getElementById('progTitle');
+  const progDetailText = document.getElementById('progDetailText');
+  const extractHint = document.getElementById('extractHint');
+
+  const ALLOWED = new Set(['pdf', 'jpg', 'jpeg', 'png']);
+  const icons = { pdf:'📋', jpg:'🖼️', jpeg:'🖼️', png:'🖼️' };
+
+  let currentAbortController = null;
+  let lastDownloadName = 'ocr.txt';
+  let lastDownloadBody = '';
+  let textFontPx = 13;
+  let progRotateTimer = null;
+  let progRotateIndex = 0;
+  let lastImagePath = null;
+
+  const OCR_WAIT_MESSAGES = [
+    'EasyOCR runs two neural stages: find text boxes, then read characters. That work scales with image size and how much text is on the page.',
+    'The progress bar only shows that the server is busy — it is not a precise percent, because OCR time depends on your file.',
+    'PDFs are processed page by page. More pages means more total time, even after the app has loaded its models.',
+    'On CPU, dense textbook-style pages are often the slowest. If the machine has a GPU and CUDA is set up, the same job is usually faster.',
+    'Please keep this tab open until the request finishes. Closing early cancels the run on your side.',
+  ];
+
+  function ext(name) {
+    const i = name.lastIndexOf('.');
+    return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+  }
+
+  function bytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  function stopProgRotator() {
+    if (progRotateTimer) {
+      clearInterval(progRotateTimer);
+      progRotateTimer = null;
+    }
+    progRotateIndex = 0;
+  }
+
+  function startProgRotator() {
+    stopProgRotator();
+    const show = () => {
+      progDetailText.classList.add('fade');
+      setTimeout(() => {
+        progDetailText.textContent = OCR_WAIT_MESSAGES[progRotateIndex % OCR_WAIT_MESSAGES.length];
+        progRotateIndex += 1;
+        progDetailText.classList.remove('fade');
+      }, 120);
+    };
+    show();
+    progRotateTimer = setInterval(show, 7000);
+  }
+
+  function setExtractHintVisible(show) {
+    extractHint.classList.toggle('show', show);
+  }
+
+  function setProcessingUi(on) {
+    if (on) {
+      progWrap.classList.add('show');
+      progFill.classList.add('indeterminate');
+      progPct.textContent = '';
+      progLabel.textContent = 'Uploading file, then EasyOCR…';
+      progTitle.textContent = 'This step takes real compute time';
+      startProgRotator();
+      extractBtn.disabled = true;
+      setExtractHintVisible(false);
+    } else {
+      stopProgRotator();
+      progDetailText.textContent = '';
+      progWrap.classList.remove('show');
+      progFill.classList.remove('indeterminate');
+      extractBtn.disabled = false;
+      digitalBtn.disabled = false;
+      setExtractHintVisible(extractBtn.classList.contains('show'));
+    }
+  }
+
+  function clearFile() {
+    fileInput.value = '';
+    fileRow.classList.remove('show');
+    extractBtn.classList.remove('show');
+    digitalBtn.classList.remove('show');
+    setExtractHintVisible(false);
+    setProcessingUi(false);
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    const e = ext(file.name);
+    if (!ALLOWED.has(e)) {
+      alert('Please choose a PDF, JPG, or PNG file.');
+      return;
+    }
+    fileBadge.textContent = icons[e] || '📄';
+    fName.textContent = file.name;
+    fSize.textContent = bytes(file.size) + ' · ' + e.toUpperCase();
+    fileRow.classList.add('show');
+    extractBtn.classList.add('show');
+    if (e === 'pdf') {
+      digitalBtn.classList.add('show');
+    } else {
+      digitalBtn.classList.remove('show');
+    }
+    setProcessingUi(false);
+    setExtractHintVisible(true);
+  }
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+  });
+
+  ['dragenter', 'dragover'].forEach((eventName) => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+  });
+
+  ['dragleave', 'drop'].forEach((eventName) => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        fileInput.files = dt.files;
+      } catch (_) {
+        /* older browsers: rely on change from browse only */
+      }
+      handleFile(f);
+    }
+  });
+
+  dropZone.addEventListener('click', (e) => {
+    if (e.target.closest('.browse-btn') || e.target.closest('.rm-btn')) return;
+    fileInput.click();
+  });
+
+  browseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    handleFile(fileInput.files[0]);
+  });
+
+  rmBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearFile();
+  });
+
+  cancelUploadBtn.addEventListener('click', () => {
+    if (currentAbortController) {
+      currentAbortController.abort();
+      currentAbortController = null;
+    }
+    extractBtn.classList.add('show');
+    setProcessingUi(false);
+    alert('Upload cancelled.');
+  });
+
+  extractBtn.addEventListener('click', async () => {
+    if (!fileInput.files.length) return;
+
+    const userNameInput = document.getElementById('userName').value.trim();
+    if (!userNameInput) {
+      alert('Please enter your name before extracting text.');
+      document.getElementById('userName').focus();
+      return;
+    }
+
+    const formData = new FormData(uploadForm);
+    currentAbortController = new AbortController();
+    const signal = currentAbortController.signal;
+
+    setProcessingUi(true);
+    extractBtn.classList.remove('show');
+
+    try {
+      const response = await fetch('/upload/', {
+        method: 'POST',
+        body: formData,
+        signal
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const body = (data.text || data.text_plain || '').trim();
+        lastDownloadBody = body;
+        lastDownloadName = data.download_filename || 'ocr.txt';
+        lastImagePath = data.image_path || null;
+        confScore.textContent = data.confidence || '--';
+        timeScore.textContent = data.time_taken || '--';
+
+        const e = ext(fName.textContent);
+        rIcon.textContent = icons[e] || '📄';
+        rFilename.textContent = fName.textContent;
+        ocrText.textContent = body || 'No text could be extracted.';
+        textFontPx = 13;
+        ocrText.style.fontSize = textFontPx + 'px';
+
+
+        ocrText.contentEditable = "false";
+        ocrText.style.border = "none";
+        ocrText.style.padding = "0";
+        editBtn.style.display = "flex";
+        saveDbBtn.style.display = "flex";
+        document.getElementById('docDateContainer').style.display = 'block';
+        
+        const today = new Date();
+        const dateString = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ');
+        document.getElementById('docDateInput').value = data.document_date || dateString;
+
+        const file = fileInput.files[0];
+        const fileUrl = URL.createObjectURL(file);
+        const rViewer = document.getElementById('rViewer');
+        rViewer.innerHTML = '';
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = fileUrl;
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+          img.style.objectFit = 'contain';
+          rViewer.appendChild(img);
+        } else if (file.type === 'application/pdf') {
+          const iframe = document.createElement('iframe');
+          iframe.src = fileUrl;
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.border = 'none';
+          rViewer.appendChild(iframe);
+        }
+
+        document.querySelector('.container').classList.add('expanded');
+        uploadView.style.display = 'none';
+        readerView.classList.add('show');
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+        extractBtn.classList.add('show');
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('aborted');
+      } else {
+        console.error(err);
+        alert('Network error while processing.');
+        extractBtn.classList.add('show');
+      }
+    } finally {
+      setProcessingUi(false);
+      currentAbortController = null;
+    }
+  });
+
+  newFileBtn.addEventListener('click', () => {
+    // Reset paywall gate on new file
+    const paywallGate = document.getElementById('paywallGate');
+    if (paywallGate) paywallGate.classList.remove('visible');
+    window.location.reload();
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([lastDownloadBody], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = lastDownloadName;
+    a.rel = 'noopener';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  zoomInBtn.addEventListener('click', () => {
+    textFontPx = Math.min(22, textFontPx + 1);
+    ocrText.style.fontSize = textFontPx + 'px';
+  });
+
+  zoomOutBtn.addEventListener('click', () => {
+    textFontPx = Math.max(10, textFontPx - 1);
+    ocrText.style.fontSize = textFontPx + 'px';
+  });
+
+  editBtn.addEventListener('click', () => {
+    ocrText.contentEditable = "true";
+    ocrText.focus();
+    ocrText.style.border = "1px solid var(--blue)";
+    ocrText.style.padding = "10px";
+    ocrText.style.borderRadius = "8px";
+    editBtn.style.display = "none";
+    saveDbBtn.style.display = "flex";
+    document.getElementById('docDateContainer').style.display = 'block';
+  });
+
+  saveDbBtn.addEventListener('click', async () => {
+    const text_content = ocrText.innerText;
+    const filename = fName.textContent;
+    const user_name = document.getElementById('userName').value || null;
+    const document_date = document.getElementById('docDateInput').value || null;
+    const image_path = lastImagePath;
+
+    saveDbBtn.disabled = true;
+    saveDbBtn.innerHTML = '<span class="r-dl-label">Saving...</span>';
+
+    try {
+      const response = await fetch('/save/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, text_content, user_name, document_date, image_path })
+      });
+      if (response.ok) {
+        alert("Saved to DB successfully!");
+        window.location.reload();
+      } else {
+        alert("Failed to save.");
+      }
+    } catch(err) {
+      console.error(err);
+      alert("Error saving document.");
+    } finally {
+      saveDbBtn.disabled = false;
+      saveDbBtn.innerHTML = '<span class="r-dl-icon" aria-hidden="true">💾</span><span class="r-dl-label">Save to DB</span>';
+    }
+  });
+</script>
+</body>
+</html>
