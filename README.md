@@ -1,4 +1,4 @@
-# OCR Document Analyzer & Diary
+ # OCR Document Analyzer & Diary
 
 Offline and web OCR for **PDF**, **PNG**, and **JPEG** using [EasyOCR](https://github.com/JaidedAI/EasyOCR). The application digitizes your physical documents and archives them securely into a personalized, interactive, and fully searchable **Database-backed Digital Diary**.
 
