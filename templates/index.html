@@ -545,6 +545,12 @@
     line-height: 1.65;
     color: var(--text2);
     font-family: 'DM Sans', sans-serif;
+    /* Guarantee text is always selectable & copyable — including inside EXE */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    cursor: text;
   }
 
   .r-empty {
