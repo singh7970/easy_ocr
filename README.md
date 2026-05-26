@@ -11,7 +11,7 @@ Offline and web OCR for **PDF**, **PNG**, and **JPEG** using [EasyOCR](https://g
 
 ## 1. Install & Configure MySQL
 
-Since this application stores all extracted OCR documents in a persistent diary, you need to set up a local MySQL database.
+ Since this application stores all extracted OCR documents in a persistent diary, you need to set up a local MySQL database.
 
 ### Linux (Ubuntu/Debian):
 ```bash
