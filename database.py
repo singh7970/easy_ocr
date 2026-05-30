@@ -3,8 +3,19 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 import datetime
 
-# --- DEMO MODE: SQLite (no installation needed, auto-creates rawdat.db) ---
-DATABASE_URL = "sqlite:///./rawdat.db"
+import os
+
+# ── Database path resolution ─────────────────────────────────────────────────
+# In EXE mode: APP_DATA_DIR is set by run_app.py → points to folder containing
+# the .exe → database is created there (persistent, next to the EXE).
+# In dev mode: falls back to current working directory (normal behaviour).
+_data_dir = os.environ.get("APP_DATA_DIR", "")
+if _data_dir:
+    # Absolute path — safe even when CWD is a temp/zip folder
+    _db_path = os.path.join(_data_dir, "rawdat.db").replace("\\", "/")
+    DATABASE_URL = f"sqlite:///{_db_path}"
+else:
+    DATABASE_URL = "sqlite:///./rawdat.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # --- PRODUCTION MODE: MySQL (uncomment below and comment out SQLite above) ---

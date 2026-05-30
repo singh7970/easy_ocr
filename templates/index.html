@@ -783,6 +783,10 @@
         </button>
         <button type="button" class="r-btn" id="zoomInBtn" title="Larger text">＋</button>
         <button type="button" class="r-btn" id="zoomOutBtn" title="Smaller text">－</button>
+        <button type="button" class="r-btn r-btn-download" id="copyBtn" title="Copy all text to clipboard">
+          <span class="r-dl-icon" aria-hidden="true">📋</span>
+          <span class="r-dl-label">Copy All</span>
+        </button>
         <button type="button" class="r-btn r-btn-download" id="downloadBtn" title="Download extracted text as .txt">
           <span class="r-dl-icon" aria-hidden="true">⬇</span>
           <span class="r-dl-label">Download .txt</span>
@@ -1113,6 +1117,53 @@
     const paywallGate = document.getElementById('paywallGate');
     if (paywallGate) paywallGate.classList.remove('visible');
     window.location.reload();
+  });
+
+  // ── Copy All button — works in EXE, browser, all environments ──────────────
+  const copyBtn = document.getElementById('copyBtn');
+  copyBtn.addEventListener('click', async () => {
+    const text = lastDownloadBody;
+    if (!text) return;
+
+    let success = false;
+
+    // Method 1: Modern Clipboard API (works on localhost / 127.0.0.1)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        success = true;
+      } catch (e) {
+        console.warn('Clipboard API failed, trying fallback:', e);
+      }
+    }
+
+    // Method 2: execCommand fallback (works everywhere including EXE)
+    if (!success) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e) {
+        console.error('execCommand copy failed:', e);
+      }
+    }
+
+    // Visual feedback
+    if (success) {
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<span class="r-dl-icon">✅</span><span class="r-dl-label">Copied!</span>';
+      setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
+    } else {
+      alert('Could not copy automatically. Please select the text and press Ctrl+C.');
+    }
   });
 
   downloadBtn.addEventListener('click', () => {
