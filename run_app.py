@@ -87,11 +87,46 @@ def wait_for_server(url: str, timeout: int = 90) -> bool:
 
 
 # ── 6. Main ──────────────────────────────────────────────────────────────────
+
+def open_browser(url: str) -> None:
+    """
+    Open Chrome first — Chrome's built-in PDF viewer supports text selection
+    inside iframes. Edge's PDF viewer does NOT support text selection in iframes.
+    Priority: Chrome → Firefox → system default (avoids Edge).
+    """
+    import subprocess
+
+    if sys.platform == "win32":
+        # Chrome paths (most common locations on Windows)
+        preferred = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            # Firefox as second choice (also supports PDF text selection)
+            r"C:\Program Files\Mozilla Firefox\firefox.exe",
+            r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+            # Edge last resort (PDF text selection broken in iframe)
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        ]
+        for path in preferred:
+            if os.path.exists(path):
+                try:
+                    subprocess.Popen([path, url])
+                    print(f"[run_app] Opened browser: {path}")
+                    return
+                except Exception:
+                    continue
+
+    # Fallback: system default browser
+    webbrowser.open(url)
+
+
 if __name__ == "__main__":
     print(f"[run_app] Bundle dir : {BASE_DIR}")
     print(f"[run_app] Data dir   : {EXE_DIR}")
     print(f"[run_app] Starting server at {URL} …")
     print(f"[run_app] NOTE: First launch loads EasyOCR — may take 30-60 s")
+    print(f"[run_app] TIP : For best PDF text selection, use Google Chrome.")
 
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
@@ -101,7 +136,7 @@ if __name__ == "__main__":
     else:
         print("[run_app] Timeout — opening browser anyway (server may still be loading).")
 
-    webbrowser.open(URL)
+    open_browser(URL)
 
     # Keep the process alive — the daemon server thread dies when this exits
     try:
